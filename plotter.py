@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.style
+import matplotlib as mpl
+import matplotlib.markers
 
 # Create data
 from scipy.spatial.distance import cdist
@@ -9,10 +12,9 @@ x = np.random.rand(N) * 500
 y = np.random.rand(N) * 500
 colors = (0, 0, 0)
 area = np.pi * 3
-
+plt.axis("off")
 # Plot
-plt.scatter(x, y, s=area * (4 * np.sin(x / 25) * np.sin(y / 25)), c=colors, alpha=0.5)
-plt.title('Scatter plot pythonspot.com')
+plt.scatter(x, y, s=area * (4 * np.sin(x / 25) * np.sin(y / 25)), c='#40e0d0', alpha=1)
 plt.xlabel('x')
 plt.ylabel('y')
 plt.savefig('test.png')

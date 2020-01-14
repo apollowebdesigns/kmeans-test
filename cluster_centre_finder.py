@@ -8,15 +8,17 @@ import operator
 
 PINK = 'rgb(214, 121, 186)'
 
-data = {'x': [], 'y': []}
+from kneed import KneeLocator
 
 
 def run():
-    img = cv2.imread('circle.png')
+    data = {'x': [], 'y': []}
+    img = cv2.imread('test.png')
     actual = img.copy()
-    img[np.where((img != [255, 0, 255]).all(axis=2))] = [0, 0, 0]
     img[np.where((img == [255, 255, 255]).all(axis=2))] = [0, 0, 0]
-    img[np.where((img == [255, 0, 255]).all(axis=2))] = [255, 255, 255]
+    img[np.where((img != [64, 224, 208]).all(axis=2))] = [0, 0, 0]
+    img[np.where((img != [0, 0, 0]).all(axis=2))] = [255, 255, 255]
+    # img[np.where((img == [64, 224, 208]).all(axis=2))] = [255, 255, 255]
     cv2.imwrite("debug.jpg", img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -35,19 +37,29 @@ def run():
             h = stats[i, cv2.CC_STAT_HEIGHT]
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
             # cv2.rectangle(actual, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
-            # TODO needs to be rectangular!
-            for i in np.arange(x, x+w, 0.1):
-                data['x'].append(x+i)
-                data['y'].append(y+i)
-
+            if x > 1000:
+                print()
+            for index, x_value in enumerate(np.arange(x, x+w, 0.5)):
+                data['x'].append(x_value)
+                data['y'].append(y+(index/10))
 
     df = pd.DataFrame(data, columns=['x', 'y'])
-    n_clusters = 3
+    print('max values are', max(data['x']))
+    print('max values are', df.max())
+    n_clusters = 18
 
-    res = _find_optimum_clusters(df)
+    # res = _find_optimum_clusters(df, 50)
+
+    kn = KneeLocator(df['x'], df['y'], curve='convex', direction='decreasing')
+    print('optimum is')
+    print(kn.knee)
+
+
     k_means = KMeans(n_clusters=n_clusters).fit(df)
     centroids_ = k_means.cluster_centers_
     print(centroids_)
+
+
 
     plt.scatter(df['x'], df['y'], c=k_means.labels_.astype(float), s=50, alpha=0.5)
     plt.scatter(centroids_[:, 0], centroids_[:, 1], c='red', s=50)
@@ -58,7 +70,8 @@ def run():
     h = 4
     for i, x in enumerate(x_coordinates):
         # cv2.rectangle(img, (x - w/2, y - h/2), (x + w/2, y + h/2), (0, 255, 0), thickness=5)
-        cv2.rectangle(actual, (int(x), int(y_coordinates[i])), (int(x + w), int(y_coordinates[i] + h)), (0, 255, 0), thickness=20)
+        cv2.rectangle(actual, (int(x), int(y_coordinates[i])), (int(x + w), int(y_coordinates[i] + h)), (0, 255, 0),
+                      thickness=20)
     cv2.imwrite("out.jpg", actual)
 
 
@@ -74,13 +87,26 @@ def run():
 #     plt.savefig('f.png')
 #     return res
 
-def _find_optimum_clusters(x):
+def _find_optimum_clusters(x, max_cluster_number):
     distorsions = []
-    for k in range(2, 20):
+    for k in range(2, max_cluster_number):
         kmeans = KMeans(n_clusters=k)
         kmeans.fit(x)
         distorsions.append(kmeans.inertia_)
-    plt.plot(range(2, 20), distorsions)
+    vvv = 999999
+    counter = 0
+    print('starting loop')
+    for idx in range(len(list(zip(range(2, max_cluster_number), distorsions)))-1):
+        diff_x = distorsions[idx][0] - distorsions[idx+1][0]
+        diff_y = distorsions[idx][0] - distorsions[idx+1][1]
+        if vvv > 1:
+            vvv = diff_y/diff_x
+            counter += 1
+        else:
+            break
+    print('what is the counter?')
+    print(counter)
+    plt.plot(range(2, max_cluster_number), distorsions)
     plt.title('elbow curve')
     plt.savefig('f.png')
     index, value = max(enumerate(distorsions), key=operator.itemgetter(1))
