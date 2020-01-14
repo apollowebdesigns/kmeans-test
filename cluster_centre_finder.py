@@ -48,7 +48,7 @@ def run():
     print('max values are', df.max())
     n_clusters = 18
 
-    # res = _find_optimum_clusters(df, 50)
+    res = _find_optimum_clusters(df, 50)
 
     kn = KneeLocator(df['x'], df['y'], curve='convex', direction='decreasing')
     print('optimum is')
@@ -88,25 +88,13 @@ def run():
 #     return res
 
 def _find_optimum_clusters(x, max_cluster_number):
+    step_size = 5
     distorsions = []
-    for k in range(2, max_cluster_number):
+    for i, k in enumerate(range(2, max_cluster_number, step_size)):
         kmeans = KMeans(n_clusters=k)
         kmeans.fit(x)
         distorsions.append(kmeans.inertia_)
-    vvv = 999999
-    counter = 0
-    print('starting loop')
-    for idx in range(len(list(zip(range(2, max_cluster_number), distorsions)))-1):
-        diff_x = distorsions[idx][0] - distorsions[idx+1][0]
-        diff_y = distorsions[idx][0] - distorsions[idx+1][1]
-        if vvv > 1:
-            vvv = diff_y/diff_x
-            counter += 1
-        else:
-            break
-    print('what is the counter?')
-    print(counter)
-    plt.plot(range(2, max_cluster_number), distorsions)
+    plt.plot(range(2, max_cluster_number, step_size), distorsions)
     plt.title('elbow curve')
     plt.savefig('f.png')
     index, value = max(enumerate(distorsions), key=operator.itemgetter(1))
