@@ -48,11 +48,7 @@ def run():
     print('max values are', df.max())
     n_clusters = 18
 
-    res = _find_optimum_clusters(df, 50)
-
-    kn = KneeLocator(df['x'], df['y'], curve='convex', direction='decreasing')
-    print('optimum is')
-    print(kn.knee)
+    n_clusters = _find_optimum_clusters(df, 50)
 
 
     k_means = KMeans(n_clusters=n_clusters).fit(df)
@@ -94,12 +90,15 @@ def _find_optimum_clusters(x, max_cluster_number):
         kmeans = KMeans(n_clusters=k)
         kmeans.fit(x)
         distorsions.append(kmeans.inertia_)
+    kn = KneeLocator(range(2, max_cluster_number, step_size), distorsions, curve='convex', direction='decreasing')
+    print('optimum is')
+    print(kn.knee)
     plt.plot(range(2, max_cluster_number, step_size), distorsions)
     plt.title('elbow curve')
     plt.savefig('f.png')
     index, value = max(enumerate(distorsions), key=operator.itemgetter(1))
     print(f'the max distortion is:{value} at index {index}')
-    return distorsions
+    return kn.knee
 
 
 if __name__ == "__main__":
