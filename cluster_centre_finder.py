@@ -37,7 +37,7 @@ def run():
             h = stats[i, cv2.CC_STAT_HEIGHT]
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
             # cv2.rectangle(actual, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
-            step_weight = 0.1
+            step_weight = 1
             for x_value in np.arange(x, x+w, step_weight):
                 for y_value in np.arange(y, y+h, step_weight):
                     data['x'].append(x_value)
