@@ -12,6 +12,7 @@ from kneed import KneeLocator
 
 
 def run():
+    MEDIAN = 36
     data = {'x': [], 'y': []}
     img = cv2.imread('test.png')
     actual = img.copy()
@@ -38,10 +39,12 @@ def run():
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
             # cv2.rectangle(actual, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
             step_weight = 1
-            for x_value in np.arange(x, x+w, step_weight):
-                for y_value in np.arange(y, y+h, step_weight):
-                    data['x'].append(x_value)
-                    data['y'].append(y_value)
+            areas = w*h
+            if areas > MEDIAN * 10:
+                for x_value in np.arange(x, x+w, step_weight):
+                    for y_value in np.arange(y, y+h, step_weight):
+                        data['x'].append(x_value)
+                        data['y'].append(y_value)
 
     df = pd.DataFrame(data, columns=['x', 'y'])
     print('max values are', max(data['x']))
@@ -58,8 +61,11 @@ def run():
 
 
     plt.scatter(df['x'], df['y'], c=k_means.labels_.astype(float), s=50, alpha=0.5)
+    plt.savefig('debug graph.png')
+    plt.clf()
     plt.scatter(centroids_[:, 0], centroids_[:, 1], c='red', s=50)
     plt.savefig('centroids.png')
+    plt.clf()
     x_coordinates = [i for i in centroids_[:, 0]]
     y_coordinates = [i for i in centroids_[:, 1]]
     w = 4
@@ -71,20 +77,8 @@ def run():
     cv2.imwrite("out.jpg", actual)
 
 
-# def _find_optimum_clusters(x):
-#     res = list()
-#     n_cluster = range(2, 20)
-#     for n in n_cluster:
-#         kmeans = KMeans(n_clusters=n)
-#         kmeans.fit(x)
-#         res.append(np.average(np.min(cdist(x, kmeans.cluster_centers_, 'euclidean'), axis=1)))
-#     plt.plot(n_cluster, res)
-#     plt.title('elbow curve')
-#     plt.savefig('f.png')
-#     return res
-
 def _find_optimum_clusters(x, max_cluster_number):
-    step_size = 5
+    step_size = 1
     distorsions = []
     for i, k in enumerate(range(2, max_cluster_number, step_size)):
         kmeans = KMeans(n_clusters=k)
@@ -96,6 +90,7 @@ def _find_optimum_clusters(x, max_cluster_number):
     plt.plot(range(2, max_cluster_number, step_size), distorsions)
     plt.title('elbow curve')
     plt.savefig('f.png')
+    plt.clf()
     index, value = max(enumerate(distorsions), key=operator.itemgetter(1))
     print(f'the max distortion is:{value} at index {index}')
     return kn.knee
